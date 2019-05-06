@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-property-placeholder="http://www.mulesoft.org/schema/mule/secure-property-placeholder" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/secure-property-placeholder http://www.mulesoft.org/schema/mule/secure-property-placeholder/current/mule-secure-property-placeholder.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="${http.host}" port="${http.port}" doc:name="HTTP Listener Configuration" >
+    </http:listener-config>
+    <db:oracle-config name="Oracle_Configuration" host="${db.host}" port="${db.port}" instance="${db.instance}" user="${db.user}" password="${db.password}" doc:name="Oracle Configuration"/>
+    <secure-property-placeholder:config name="Secure_Property_Placeholder" key="1234asdnjkfrhert" location="classpath:${mule.env}-system.properties" doc:name="Secure Property Placeholder"/>
+    <flow name="employeecreationFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/empcreation" doc:name="HTTP"/>
+        <set-variable variableName="empId" value="#[json:request/empid]" doc:name="Variable"/>
+        <json:json-to-object-transformer returnClass="java.util.HashMap" doc:name="JSON to Object"/>
+        <logger message="initialrequestdata :#[message.payloadAs(java.lang.String)]" level="INFO" doc:name="Logger"/>
+        <db:insert config-ref="Oracle_Configuration" doc:name="Database">
+            <db:parameterized-query><![CDATA[insert into employee_01 values (#[payload.request.empid],#[payload.request.cityname],#[payload.request.designation],#[payload.request.state])]]></db:parameterized-query>
+        </db:insert>
+        <set-payload value="Row inserted into employee_01 table sucessfully" doc:name="Set Payload"/>
+
+    </flow>
+</mule>
